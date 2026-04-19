@@ -1,53 +1,60 @@
-//! {{project-name}} — your game.
+//! {{project-name}}: your game.
 //!
-//! Until jackdaw's Play-in-Editor (PIE) runtime lands, this
-//! project loads as a plain extension so you can start
-//! prototyping. When PIE ships, swap the `JackdawExtension` impl
-//! below for a `jackdaw_game::export_game!` entry point and the
-//! same code gets driven by a `SubApp` on a worker thread inside
-//! the editor.
+//! Scaffolded via `jackdaw_template_game`. Loaded by jackdaw at
+//! startup through the `jackdaw_game_entry_v1` FFI symbol emitted
+//! by `export_game!` at the bottom of this file.
 //!
-//! Put your game systems into [`GamePlugin`] so they'll carry over
-//! unchanged when PIE lands.
+//! `GamePlugin::build` is where your game logic lives. Gate each
+//! system on `PlayState::Playing` so it only runs while the user
+//! has the editor's Play button engaged.
+//!
+//! The scaffolded demo spawns a spinning cube when Play is pressed
+//! and rotates it on Update. Delete it and build your own game on
+//! top.
 
+// `use bevy::prelude::*` reaches everything — jackdaw's SDK proxy
+// exposes bevy primitives and jackdaw-specific items (PlayState,
+// the FFI, operators, …) through a single unified prelude. No need
+// for a separate `use jackdaw_api::prelude::*;`.
 use bevy::prelude::*;
-use jackdaw_api::prelude::*;
 
-/// Group your game's systems, resources, and observers under this
-/// plugin. `GamePlugin::build` is where your game logic lives.
+#[derive(Component)]
+struct SpinningCube;
+
+const SPIN_RATE: f32 = 1.2;
+
 pub struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, greet_on_startup);
+        app.add_systems(OnEnter(PlayState::Playing), spawn_cube)
+            .add_systems(Update, spin_cube.run_if(in_state(PlayState::Playing)));
     }
 }
 
-fn greet_on_startup() {
-    // Your game systems start here.
+fn spawn_cube(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
+    commands.spawn((
+        Name::new("{{project-name | title_case}} Cube"),
+        SpinningCube,
+        Mesh3d(meshes.add(Cuboid::from_length(1.0))),
+        MeshMaterial3d(materials.add(StandardMaterial {
+            base_color: Color::srgb(0.6, 0.85, 1.0),
+            ..default()
+        })),
+        Transform::from_xyz(0.0, 1.0, 0.0),
+    ));
+    info!("{{project-name}}: cube spawned");
 }
 
-/// Thin wrapper the editor loads as an extension for now.
-/// Production `jackdaw new game` projects will move to PIE once
-/// the runtime crate lands.
-pub struct {{crate_name | pascal_case}};
-
-impl JackdawExtension for {{crate_name | pascal_case}} {
-    fn name(&self) -> &str {
-        "{{project-name}}"
-    }
-
-    fn register(&self, _ctx: &mut ExtensionContext) {
-        // Until PIE lands, `GamePlugin` isn't actually installed
-        // into the editor's app — doing so could interfere with
-        // the editor's own systems. Keep writing game logic inside
-        // GamePlugin and it'll start executing as soon as PIE is
-        // available.
-        info!("{{project-name}} loaded (waiting for PIE runtime).");
+fn spin_cube(time: Res<Time>, mut cubes: Query<&mut Transform, With<SpinningCube>>) {
+    let dt = time.delta_secs();
+    for mut transform in cubes.iter_mut() {
+        transform.rotate_y(SPIN_RATE * dt);
     }
 }
 
-jackdaw_api::export_extension!(
-    "{{project-name}}",
-    || Box::new({{crate_name | pascal_case}})
-);
+jackdaw_api::export_game!("{{project-name}}", GamePlugin);
