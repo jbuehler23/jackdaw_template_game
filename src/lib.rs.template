@@ -1,0 +1,53 @@
+//! {{project-name}} — your game.
+//!
+//! Until jackdaw's Play-in-Editor (PIE) runtime lands, this
+//! project loads as a plain extension so you can start
+//! prototyping. When PIE ships, swap the `JackdawExtension` impl
+//! below for a `jackdaw_game::export_game!` entry point and the
+//! same code gets driven by a `SubApp` on a worker thread inside
+//! the editor.
+//!
+//! Put your game systems into [`GamePlugin`] so they'll carry over
+//! unchanged when PIE lands.
+
+use bevy::prelude::*;
+use jackdaw_api::prelude::*;
+
+/// Group your game's systems, resources, and observers under this
+/// plugin. `GamePlugin::build` is where your game logic lives.
+pub struct GamePlugin;
+
+impl Plugin for GamePlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(Update, greet_on_startup);
+    }
+}
+
+fn greet_on_startup() {
+    // Your game systems start here.
+}
+
+/// Thin wrapper the editor loads as an extension for now.
+/// Production `jackdaw new game` projects will move to PIE once
+/// the runtime crate lands.
+pub struct {{crate_name | pascal_case}};
+
+impl JackdawExtension for {{crate_name | pascal_case}} {
+    fn name(&self) -> &str {
+        "{{project-name}}"
+    }
+
+    fn register(&self, _ctx: &mut ExtensionContext) {
+        // Until PIE lands, `GamePlugin` isn't actually installed
+        // into the editor's app — doing so could interfere with
+        // the editor's own systems. Keep writing game logic inside
+        // GamePlugin and it'll start executing as soon as PIE is
+        // available.
+        info!("{{project-name}} loaded (waiting for PIE runtime).");
+    }
+}
+
+jackdaw_api::export_extension!(
+    "{{project-name}}",
+    || Box::new({{crate_name | pascal_case}})
+);

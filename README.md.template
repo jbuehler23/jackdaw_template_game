@@ -1,0 +1,30 @@
+# {{project-name | title_case}}
+
+A jackdaw game generated from the
+[jackdaw-template-game](https://github.com/jbuehler23/jackdaw_template_game)
+template.
+
+## Status
+
+Jackdaw's Play-in-Editor (PIE) runtime — the part that actually
+*runs* your game inside the editor on a worker thread with a
+shared scene — is under construction. Until it lands, game
+projects scaffold as regular extensions so you can still write
+Bevy code against the editor.
+
+Writing your systems inside `GamePlugin` means the migration when
+PIE ships will be a one-line change: swap the `JackdawExtension`
+impl at the bottom of `src/lib.rs` for a
+`jackdaw_game::export_game!` invocation, and your plugin will
+start getting driven by jackdaw's SubApp runner.
+
+## Build and install
+
+Same as extensions for now:
+
+1. Open jackdaw.
+2. **File → Extensions → Build from project folder…**
+3. Select this project's root directory.
+
+The project builds and live-loads. Once PIE ships, the Play button
+in the editor toolbar will drive your game instead.
