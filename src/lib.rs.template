@@ -9,8 +9,8 @@
 //! has the editor's Play button engaged.
 //!
 //! The scaffolded demo spawns a spinning cube when Play is pressed
-//! and rotates it on Update. Delete it and build your own game on
-//! top.
+//! and rotates it on Update. Edit `SpinningCube::speed` in the
+//! inspector while Play is running to see the game react live.
 
 // `use bevy::prelude::*` reaches everything — jackdaw's SDK proxy
 // exposes bevy primitives and jackdaw-specific items (PlayState,
@@ -18,10 +18,25 @@
 // for a separate `use jackdaw_api::prelude::*;`.
 use bevy::prelude::*;
 
-#[derive(Component)]
-struct SpinningCube;
+/// Marker + authoring data for the demo cube.
+///
+/// `Reflect` + `#[reflect(Component)]` is all you need — jackdaw
+/// auto-registers derived-Reflect types into the `AppTypeRegistry`
+/// after it dlopens your dylib, so the inspector finds this type
+/// without any explicit `app.register_type::<SpinningCube>()`.
+#[derive(Component, Reflect)]
+#[reflect(Component)]
+struct SpinningCube {
+    /// Rotation speed in radians per second. Tweak live from the
+    /// inspector while the game is running.
+    speed: f32,
+}
 
-const SPIN_RATE: f32 = 1.2;
+impl Default for SpinningCube {
+    fn default() -> Self {
+        Self { speed: 1.2 }
+    }
+}
 
 pub struct GamePlugin;
 
@@ -39,7 +54,7 @@ fn spawn_cube(
 ) {
     commands.spawn((
         Name::new("{{project-name | title_case}} Cube"),
-        SpinningCube,
+        SpinningCube::default(),
         Mesh3d(meshes.add(Cuboid::from_length(1.0))),
         MeshMaterial3d(materials.add(StandardMaterial {
             base_color: Color::srgb(0.6, 0.85, 1.0),
@@ -50,10 +65,10 @@ fn spawn_cube(
     info!("{{project-name}}: cube spawned");
 }
 
-fn spin_cube(time: Res<Time>, mut cubes: Query<&mut Transform, With<SpinningCube>>) {
+fn spin_cube(time: Res<Time>, mut cubes: Query<(&SpinningCube, &mut Transform)>) {
     let dt = time.delta_secs();
-    for mut transform in cubes.iter_mut() {
-        transform.rotate_y(SPIN_RATE * dt);
+    for (cube, mut transform) in cubes.iter_mut() {
+        transform.rotate_y(cube.speed * dt);
     }
 }
 
