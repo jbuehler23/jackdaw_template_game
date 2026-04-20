@@ -55,11 +55,13 @@ pub struct MyGame;
 
 impl GamePlugin for MyGame {
     fn build(&self, ctx: &mut GameApp<'_>) {
-        // `#[derive(Reflect)]` auto-registers types into bevy's
-        // inventory; jackdaw sweeps that inventory after it loads
-        // this dylib, so `SpinningCube` shows up in the inspector's
-        // Add Component list automatically — no `ctx.register_type`
-        // needed. Drop it here only if you stop using Reflect.
+        // `register_type` is required for every component/resource you
+        // want the inspector, scene file, and remote protocol to see.
+        // `#[derive(Reflect)]` alone puts the type in bevy's inventory,
+        // but jackdaw can't sweep that inventory after dlopen without
+        // tripping a lock in bevy 0.18's type-registry plumbing — so
+        // the dylib has to call `register_type::<T>()` itself.
+        ctx.register_type::<SpinningCube>();
         ctx.add_systems(Update, spin_cube.run_if(in_state(PlayState::Playing)));
     }
 }
