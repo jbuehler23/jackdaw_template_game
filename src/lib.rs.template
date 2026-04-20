@@ -4,30 +4,26 @@
 //! startup through the `jackdaw_game_entry_v1` FFI symbol emitted
 //! by `export_game!` at the bottom of this file.
 //!
-//! `GamePlugin::build` is where your game logic lives. Gate each
-//! system on `PlayState::Playing` so it only runs while the user
-//! has the editor's Play button engaged.
+//! Your game implements `jackdaw_api::GamePlugin` (not bevy's
+//! `Plugin`). The signature takes a `&mut GameApp<'_>` — this
+//! wrapper provides `add_systems`, `add_observer`,
+//! `insert_resource`, and `register_type` that tag every
+//! registration with your game's name, so jackdaw can tear them
+//! down and reinstall new code on source save without a process
+//! restart.
 //!
-//! The scaffolded demo spawns a spinning cube when Play is pressed
-//! and rotates it on Update. Edit `SpinningCube::speed` in the
-//! inspector while Play is running to see the game react live.
+//! Gate each system on `PlayState::Playing` so it only runs while
+//! the user has the editor's Play button engaged.
 
-// `use bevy::prelude::*` reaches everything — jackdaw's SDK proxy
-// exposes bevy primitives and jackdaw-specific items (PlayState,
-// the FFI, operators, …) through a single unified prelude. No need
-// for a separate `use jackdaw_api::prelude::*;`.
+// One import reaches everything — jackdaw's SDK proxy exposes bevy
+// primitives and jackdaw items (PlayState, GameApp, GamePlugin,
+// the FFI, operators, …) through a unified prelude.
 use bevy::prelude::*;
 
-/// Marker + authoring data for the demo cube.
-///
-/// `Reflect` + `#[reflect(Component)]` is all you need — jackdaw
-/// auto-registers derived-Reflect types into the `AppTypeRegistry`
-/// after it dlopens your dylib, so the inspector finds this type
-/// without any explicit `app.register_type::<SpinningCube>()`.
 #[derive(Component, Reflect)]
 #[reflect(Component)]
 struct SpinningCube {
-    /// Rotation speed in radians per second. Tweak live from the
+    /// Rotation speed in radians per second. Scrub live from the
     /// inspector while the game is running.
     speed: f32,
 }
@@ -38,11 +34,13 @@ impl Default for SpinningCube {
     }
 }
 
-pub struct GamePlugin;
+#[derive(Default)]
+pub struct MyGame;
 
-impl Plugin for GamePlugin {
-    fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(PlayState::Playing), spawn_cube)
+impl GamePlugin for MyGame {
+    fn build(&self, ctx: &mut GameApp<'_>) {
+        ctx.register_type::<SpinningCube>()
+            .add_systems(OnEnter(PlayState::Playing), spawn_cube)
             .add_systems(Update, spin_cube.run_if(in_state(PlayState::Playing)));
     }
 }
@@ -72,4 +70,4 @@ fn spin_cube(time: Res<Time>, mut cubes: Query<(&SpinningCube, &mut Transform)>)
     }
 }
 
-jackdaw_api::export_game!("{{project-name}}", GamePlugin);
+jackdaw_api::export_game!("{{project-name}}", MyGame);
