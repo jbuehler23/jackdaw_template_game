@@ -57,9 +57,17 @@ scene per project so you don't re-pick on every open.
 
 ## Edit this code
 
-Add new components in `src/lib.rs`, register them in `GamePlugin::build`
-with `ctx.register_type::<YourComponent>()`, and add systems with
-`ctx.add_systems(Update, your_system.run_if(in_state(PlayState::Playing)))`.
+Declare new components in `src/lib.rs` with
+`#[derive(Component, Reflect, Default)]` and `#[reflect(Component, Default)]`.
+Jackdaw sweeps the dylib's reflect inventory after loading it, so your
+new types appear in the Inspector's Add Component picker automatically
+— no explicit registration required.
+
+Add systems inside `GamePlugin::build`:
+
+```rust
+ctx.add_systems(Update, your_system.run_if(in_state(PlayState::Playing)));
+```
 
 Save the file and jackdaw's hot-reload watcher rebuilds + swaps the
 game in place — no restart, no flicker, your scene stays put.

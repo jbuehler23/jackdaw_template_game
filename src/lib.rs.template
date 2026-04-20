@@ -6,48 +6,47 @@
 //!
 //! # How this template is wired
 //!
-//! `GamePlugin` registers the [`SpinningCube`] component type and a
-//! system that rotates any entity carrying it while
-//! `PlayState::Playing`. **No entities are spawned from code** —
-//! jackdaw's scene (the `.jsn` file) is the source of truth for
-//! level content, so a cube you add from the editor's hierarchy
-//! with a `SpinningCube` attached will persist across sessions
-//! and have its Transform edited in the inspector saved to disk.
+//! `GamePlugin::build` adds one system that rotates any entity
+//! carrying the [`SpinningCube`] component while `PlayState::Playing`.
+//! **No entities are spawned from code** — jackdaw's scene (the
+//! `.jsn` file) is the source of truth for level content, so a cube
+//! you add from the editor's hierarchy with a `SpinningCube` attached
+//! persists across sessions and has its Transform edits saved to disk.
 //!
 //! This split — *authored entities live in the scene, game
 //! behaviour lives in code* — mirrors Unity/Unreal/Godot.
 //!
+//! # Declaring components
+//!
+//! Any `#[derive(Component, Reflect, Default)]` struct in this crate
+//! shows up automatically in jackdaw's **Add Component** picker —
+//! jackdaw sweeps the dylib's reflect inventory after it loads the
+//! `.so`. No explicit registration needed. `#[reflect(Component,
+//! Default)]` is required so the picker (which filters on
+//! `ReflectDefault`) can see the type.
+//!
 //! # Try it
 //!
 //! 1. Open this project from jackdaw.
-//! 2. In the **Hierarchy** panel, right-click → Add → Cube.
-//! 3. Select the cube, and in the **Inspector** click "Add Component"
+//! 2. In the **Hierarchy** panel, right-click → Add → Cube (or draw a
+//!    Brush with the Brush tool).
+//! 3. Select the entity; in the **Inspector** click "Add Component"
 //!    → `SpinningCube`. Set `speed` (e.g. `1.5`).
-//! 4. **File → Save** to persist the cube into the scene file.
-//! 5. Click **Play**. The cube spins. Drag `speed` live to change
+//! 4. **File → Save** to persist the component into the scene file.
+//! 5. Click **Play**. The entity spins. Drag `speed` live to change
 //!    the rate.
-//! 6. Click **Stop**. Nothing is lost — the cube was authored, not
+//! 6. Click **Stop**. Nothing is lost — the entity was authored, not
 //!    game-spawned.
 
-// One import reaches everything — jackdaw's SDK proxy exposes bevy
-// primitives and jackdaw items (PlayState, GameApp, GamePlugin,
-// SpinningCube, operators, …) through a unified prelude.
 use bevy::prelude::*;
 
-/// Spin-rate in radians per second. Attach this to any scene
-/// entity in the editor's inspector; the `spin_cube` system in
-/// this crate rotates every entity carrying it while
-/// `PlayState::Playing`.
-#[derive(Component, Reflect)]
-#[reflect(Component)]
+/// Spin-rate in radians per second. Attach to any scene entity in
+/// the inspector; `spin_cube` rotates every entity carrying it
+/// while `PlayState::Playing`.
+#[derive(Component, Reflect, Default)]
+#[reflect(Component, Default)]
 pub struct SpinningCube {
     pub speed: f32,
-}
-
-impl Default for SpinningCube {
-    fn default() -> Self {
-        Self { speed: 1.2 }
-    }
 }
 
 #[derive(Default)]
@@ -55,13 +54,6 @@ pub struct MyGame;
 
 impl GamePlugin for MyGame {
     fn build(&self, ctx: &mut GameApp<'_>) {
-        // `register_type` is required for every component/resource you
-        // want the inspector, scene file, and remote protocol to see.
-        // `#[derive(Reflect)]` alone puts the type in bevy's inventory,
-        // but jackdaw can't sweep that inventory after dlopen without
-        // tripping a lock in bevy 0.18's type-registry plumbing — so
-        // the dylib has to call `register_type::<T>()` itself.
-        ctx.register_type::<SpinningCube>();
         ctx.add_systems(Update, spin_cube.run_if(in_state(PlayState::Playing)));
     }
 }
