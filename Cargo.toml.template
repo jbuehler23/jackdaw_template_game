@@ -23,3 +23,12 @@ crate-type = ["cdylib"]
 # `--extern` flag unconditionally.
 [dependencies]
 bevy = "0.18"
+
+# The build.rs (below) scans src/ for `#[derive(..., Reflect, ...)]`
+# types and emits an explicit registration function that jackdaw's
+# `export_game!` macro `include!`s. This is how jackdaw auto-registers
+# your types with the editor — no manual `ctx.register_type::<T>()`
+# needed. syn parses the source; quote is unused here but kept for
+# potential future use if you want to generate richer code.
+[build-dependencies]
+syn = { version = "2", features = ["full", "visit"] }
