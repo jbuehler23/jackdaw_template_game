@@ -16,9 +16,9 @@ Jackdaw follows the same split as Unity/Unreal/Godot:
 
 The scaffold ships with one component and one system:
 
-- `SpinningCube { speed: f32 }` — attach this to any scene entity
-  you want to spin.
-- `spin_cube` — rotates every entity carrying `SpinningCube` while
+- `SpinningCube { speed: f32 }`: attach to any scene entity you
+  want to spin.
+- `spin_cube`: rotates every entity carrying `SpinningCube` while
   `PlayState::Playing`.
 
 No entities are spawned from code. You add them in the editor.
@@ -33,7 +33,7 @@ No entities are spawned from code. You add them in the editor.
 4. **File → Save**. The component + transform are persisted back
    into `assets/scene.jsn`.
 5. Press **Play** (top-right toolbar). The cube spins.
-6. While playing, drag the inspector's `speed` slider — rotation
+6. While playing, drag the inspector's `speed` slider; rotation
    rate changes immediately.
 7. Press **Stop**. The cube stays in its authored position. (Its
    runtime-edited `speed` reverts to the saved value because Stop
@@ -58,10 +58,11 @@ scene per project so you don't re-pick on every open.
 ## Edit this code
 
 Declare new components in `src/lib.rs` with
-`#[derive(Component, Reflect, Default)]` and `#[reflect(Component, Default)]`.
-Jackdaw sweeps the dylib's reflect inventory after loading it, so your
-new types appear in the Inspector's Add Component picker automatically
-— no explicit registration required.
+`#[derive(Component, Reflect, Default)]` and
+`#[reflect(Component, Default)]`. Jackdaw sweeps the dylib's
+reflect inventory after loading it, so your new types appear in
+the Inspector's Add Component picker automatically. No explicit
+registration required.
 
 Add systems inside `GamePlugin::build`:
 
@@ -69,13 +70,15 @@ Add systems inside `GamePlugin::build`:
 ctx.add_systems(Update, your_system.run_if(in_state(PlayState::Playing)));
 ```
 
-Save the file and jackdaw's hot-reload watcher rebuilds + swaps the
-game in place — no restart, no flicker, your scene stays put.
+With jackdaw open on the project, run `cargo build` in the project
+directory. Jackdaw's hot-reload watcher picks up the new artifact
+and swaps the game in place: no restart, no flicker, your scene
+stays put.
 
 ## Why the first build is slow
 
-The first `cargo build` compiles all of bevy from crates.io —
-~500 crates, a few minutes. The resulting `libbevy-<hash>.rlib`
+The first `cargo build` compiles all of bevy from crates.io
+(~500 crates, a few minutes). The resulting `libbevy-<hash>.rlib`
 is never actually linked; jackdaw's rustc wrapper redirects
 `--extern bevy=` at the editor's `libjackdaw_sdk.so` so TypeIds
 match across the FFI boundary. Subsequent edits to your own code

@@ -8,19 +8,19 @@
 //!
 //! `GamePlugin::build` adds one system that rotates any entity
 //! carrying the [`SpinningCube`] component while `PlayState::Playing`.
-//! **No entities are spawned from code** — jackdaw's scene (the
+//! **No entities are spawned from code.** Jackdaw's scene (the
 //! `.jsn` file) is the source of truth for level content, so a cube
 //! you add from the editor's hierarchy with a `SpinningCube` attached
 //! persists across sessions and has its Transform edits saved to disk.
 //!
-//! This split — *authored entities live in the scene, game
-//! behaviour lives in code* — mirrors Unity/Unreal/Godot.
+//! Split: authored entities live in the scene, game behaviour lives
+//! in code. Same shape as Unity/Unreal/Godot.
 //!
 //! # Declaring components
 //!
 //! Any `#[derive(Component, Reflect, Default)]` struct in this crate
-//! shows up automatically in jackdaw's **Add Component** picker —
-//! jackdaw sweeps the dylib's reflect inventory after it loads the
+//! shows up automatically in jackdaw's **Add Component** picker.
+//! Jackdaw sweeps the dylib's reflect inventory after loading the
 //! `.so`. No explicit registration needed. `#[reflect(Component,
 //! Default)]` is required so the picker (which filters on
 //! `ReflectDefault`) can see the type.
@@ -35,7 +35,7 @@
 //! 4. **File → Save** to persist the component into the scene file.
 //! 5. Click **Play**. The entity spins. Drag `speed` live to change
 //!    the rate.
-//! 6. Click **Stop**. Nothing is lost — the entity was authored, not
+//! 6. Click **Stop**. Nothing is lost; the entity was authored, not
 //!    game-spawned.
 
 use bevy::prelude::*;

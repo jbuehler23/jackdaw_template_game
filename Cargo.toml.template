@@ -19,16 +19,15 @@ crate-type = ["cdylib"]
 # `--extern bevy=<rlib>` to `--extern bevy=libjackdaw_sdk.so` so
 # the TypeIds in this cdylib line up with the editor's.
 #
-# `jackdaw_api` is never declared here — the wrapper injects its
+# `jackdaw_api` is never declared here; the wrapper injects its
 # `--extern` flag unconditionally.
 [dependencies]
 bevy = "0.18"
 
-# The build.rs (below) scans src/ for `#[derive(..., Reflect, ...)]`
-# types and emits an explicit registration function that jackdaw's
-# `export_game!` macro `include!`s. This is how jackdaw auto-registers
-# your types with the editor — no manual `ctx.register_type::<T>()`
-# needed. syn parses the source; quote is unused here but kept for
-# potential future use if you want to generate richer code.
+# The build.rs scans src/ for `#[derive(..., Reflect, ...)]` types
+# and emits an explicit registration function that jackdaw's
+# `export_game!` macro `include!`s. This is how jackdaw auto-
+# registers your types with the editor without forcing you to call
+# `ctx.register_type::<T>()` by hand.
 [build-dependencies]
 syn = { version = "2", features = ["full", "visit"] }
