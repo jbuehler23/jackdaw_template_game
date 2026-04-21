@@ -56,8 +56,23 @@ fn scan_file(path: &Path, types: &mut Vec<String>) {
     let Ok(source) = std::fs::read_to_string(path) else {
         return;
     };
-    let Ok(file) = syn::parse_file(&source) else {
-        return;
+    let file = match syn::parse_file(&source) {
+        Ok(f) => f,
+        Err(err) => {
+            // Surface the parse failure as a cargo warning so a
+            // missing-from-inspector diagnosis doesn't require the
+            // user to also inspect build.rs. The real compiler will
+            // also fail to compile this file, giving a better error
+            // message — this warning is just a pointer at the
+            // knock-on effect (type won't appear in Add Component).
+            println!(
+                "cargo:warning=jackdaw: failed to parse {} for reflect scan \
+                 ({err}) — types in this file will be missing from the \
+                 Inspector until the parse error is fixed.",
+                path.display()
+            );
+            return;
+        }
     };
     let mut visitor = ReflectVisitor { out: types };
     visitor.visit_file(&file);
