@@ -22,7 +22,7 @@ crate-type = ["cdylib"]
 # `jackdaw_api` is never declared here; the wrapper injects its
 # `--extern` flag unconditionally.
 [dependencies]
-bevy = { version = "0.18", features = ["reflect_auto_register_static"] }
+bevy = "0.18"
 
 # The build.rs scans src/ for `#[derive(..., Reflect, ...)]` types
 # and emits an explicit registration function that jackdaw's
